@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <title>ランダムジャンプHTMLジェネレーター</title>
+</head>
+<body>
+  <h1>ランダムジャンプ用HTML作成ツール</h1>
+  <p>1行につき1つのURLを入力してください：</p>
+  <textarea id="urlInput" rows="10" cols="60" placeholder="https://example.com/a&#10;https://example.com/b"></textarea><br>
+  <button onclick="generate()">HTMLファイルを生成・ダウンロード</button>
+
+  <script>
+    function generate() {
+      const urls = document.getElementById("urlInput").value
+        .split("\n")
+        .map(u => u.trim())
+        .filter(u => u);
+
+      if (urls.length < 2) {
+        alert("少なくとも2つ以上のURLを入力してください。");
+        return;
+      }
+
+      const htmlContent = `<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <title>Random Redirect</title>
+  <script>
+    const urls = ${JSON.stringify(urls)};
+    window.onload = function() {
+      const selected = urls[Math.floor(Math.random() * urls.length)];
+      window.location.href = selected;
+    };
+  </script>
+</head>
+<body>
+  <p>振り分け中です。ジャンプしない場合は<a href="#" id="fallback">こちら</a>をクリックしてください。</p>
+  <script>
+    document.getElementById("fallback").href = urls[Math.floor(Math.random() * urls.length)];
+  </script>
+</body>
+</html>`;
+
+      const blob = new Blob([htmlContent], { type: "text/html" });
+      const link = document.createElement("a");
+      link.href = URL.createObjectURL(blob);
+      link.download = "index.html";
+      link.click();
+    }
+  </script>
+</body>
+</html>
