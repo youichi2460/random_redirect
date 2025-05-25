@@ -162,14 +162,12 @@
     
     window.onload = function() {
       selectedUrl = urls[Math.floor(Math.random() * urls.length)];
-      setTimeout(function() {
-        window.location.href = selectedUrl;
-      }, 1000);
+      window.location.href = selectedUrl;
     };
   <\/script>
 </head>
 <body>
-  <p>振り分け中です（1秒後に自動遷移）...</p>
+  <p>振り分け中です（即座に自動遷移）...</p>
   <p>自動で遷移しない場合は<a href="#" id="fallback">こちら</a>をクリックしてください。</p>
   <script>
     document.getElementById("fallback").onclick = function() {
