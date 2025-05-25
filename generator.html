@@ -3,56 +3,151 @@
 <head>
   <meta charset="UTF-8">
   <title>重み付きランダムジャンプHTMLジェネレーター</title>
+  <style>
+    body { font-family: Arial, sans-serif; margin: 20px; }
+    table { border-collapse: collapse; width: 100%; margin: 20px 0; }
+    th, td { border: 1px solid #ddd; padding: 8px; text-align: left; }
+    th { background-color: #f2f2f2; }
+    input[type="text"] { width: 300px; }
+    input[type="number"] { width: 80px; }
+    button { margin: 5px; padding: 10px 15px; }
+    .delete-btn { background-color: #ff4444; color: white; border: none; padding: 5px 10px; cursor: pointer; }
+    .delete-btn:hover { background-color: #cc0000; }
+    #summary { margin: 20px 0; padding: 10px; background-color: #f9f9f9; border-radius: 5px; }
+  </style>
 </head>
 <body>
   <h1>重み付きランダムジャンプHTMLジェネレーター</h1>
   <p>下の表にリンク先URLと重み（数値）を入力してください。</p>
-
+  
   <table id="urlTable">
     <tr>
       <th>URL</th>
       <th>重み</th>
+      <th>確率</th>
+      <th>操作</th>
     </tr>
     <tr>
-      <td><input type="text" placeholder="https://example.com/a"></td>
-      <td><input type="number" value="1" min="1"></td>
+      <td><input type="text" placeholder="https://example.com/a" oninput="updateSummary()"></td>
+      <td><input type="number" value="1" min="1" oninput="updateSummary()"></td>
+      <td class="probability">-</td>
+      <td><button class="delete-btn" onclick="deleteRow(this)">削除</button></td>
     </tr>
     <tr>
-      <td><input type="text" placeholder="https://example.com/b"></td>
-      <td><input type="number" value="1" min="1"></td>
+      <td><input type="text" placeholder="https://example.com/b" oninput="updateSummary()"></td>
+      <td><input type="number" value="1" min="1" oninput="updateSummary()"></td>
+      <td class="probability">-</td>
+      <td><button class="delete-btn" onclick="deleteRow(this)">削除</button></td>
     </tr>
   </table>
-
+  
   <button onclick="addRow()">行を追加</button>
   <button onclick="generate()">HTMLファイルを生成・ダウンロード</button>
+  
+  <div id="summary">
+    <h3>設定サマリー</h3>
+    <p>有効なURL数: <span id="validCount">0</span></p>
+    <p>重みの合計: <span id="totalWeight">0</span></p>
+  </div>
 
   <script>
+    // URLバリデーション関数
+    function isValidUrl(string) {
+      try {
+        const url = new URL(string);
+        return url.protocol === 'http:' || url.protocol === 'https:';
+      } catch (_) {
+        return false;
+      }
+    }
+
+    // 行を追加
     function addRow() {
       const table = document.getElementById("urlTable");
       const row = table.insertRow();
       const cell1 = row.insertCell();
       const cell2 = row.insertCell();
-      cell1.innerHTML = '<input type="text" placeholder="https://example.com">';
-      cell2.innerHTML = '<input type="number" value="1" min="1">';
+      const cell3 = row.insertCell();
+      const cell4 = row.insertCell();
+      
+      cell1.innerHTML = '<input type="text" placeholder="https://example.com" oninput="updateSummary()">';
+      cell2.innerHTML = '<input type="number" value="1" min="1" oninput="updateSummary()">';
+      cell3.innerHTML = '<span class="probability">-</span>';
+      cell4.innerHTML = '<button class="delete-btn" onclick="deleteRow(this)">削除</button>';
+      
+      updateSummary();
     }
 
+    // 行を削除
+    function deleteRow(button) {
+      const row = button.closest('tr');
+      const table = document.getElementById("urlTable");
+      if (table.rows.length > 2) { // ヘッダー行 + 最低1行は残す
+        row.remove();
+        updateSummary();
+      } else {
+        alert("最低1行は必要です。");
+      }
+    }
+
+    // サマリーを更新
+    function updateSummary() {
+      const table = document.getElementById("urlTable");
+      const rows = Array.from(table.rows).slice(1);
+      let validCount = 0;
+      let totalWeight = 0;
+      const validEntries = [];
+
+      rows.forEach(row => {
+        const url = row.cells[0].querySelector("input").value.trim();
+        const weight = parseInt(row.cells[1].querySelector("input").value) || 0;
+        
+        if (url && weight > 0 && isValidUrl(url)) {
+          validCount++;
+          totalWeight += weight;
+          validEntries.push({ row, weight });
+        }
+      });
+
+      // 確率を計算して表示
+      validEntries.forEach(({ row, weight }) => {
+        const probability = totalWeight > 0 ? ((weight / totalWeight) * 100).toFixed(1) + '%' : '-';
+        row.cells[2].textContent = probability;
+      });
+
+      // 無効な行の確率をクリア
+      rows.forEach(row => {
+        const url = row.cells[0].querySelector("input").value.trim();
+        const weight = parseInt(row.cells[1].querySelector("input").value) || 0;
+        
+        if (!url || weight <= 0 || !isValidUrl(url)) {
+          row.cells[2].textContent = '-';
+        }
+      });
+
+      document.getElementById("validCount").textContent = validCount;
+      document.getElementById("totalWeight").textContent = totalWeight;
+    }
+
+    // HTMLファイルを生成
     function generate() {
       const table = document.getElementById("urlTable");
-      const rows = Array.from(table.rows).slice(1); // Skip header row
+      const rows = Array.from(table.rows).slice(1);
       const weightedUrls = [];
-
+      
       for (const row of rows) {
         const url = row.cells[0].querySelector("input").value.trim();
-        const weight = parseInt(row.cells[1].querySelector("input").value);
-        if (url && weight > 0) {
+        const weight = parseInt(row.cells[1].querySelector("input").value) || 0;
+        
+        if (url && weight > 0 && isValidUrl(url)) {
           for (let i = 0; i < weight; i++) {
             weightedUrls.push(url);
           }
         }
       }
-
-      if (weightedUrls.length < 2) {
-        alert("少なくとも2つ以上のURLを設定してください。");
+      
+      if (weightedUrls.length < 1) {
+        alert("少なくとも1つ以上の有効なURLを設定してください。");
         return;
       }
 
@@ -63,26 +158,48 @@
   <title>Random Redirect</title>
   <script>
     const urls = ${JSON.stringify(weightedUrls)};
+    let selectedUrl = null;
+    
     window.onload = function() {
-      const selected = urls[Math.floor(Math.random() * urls.length)];
-      window.location.href = selected;
+      selectedUrl = urls[Math.floor(Math.random() * urls.length)];
+      setTimeout(function() {
+        window.location.href = selectedUrl;
+      }, 1000);
     };
   <\/script>
 </head>
 <body>
-  <p>振り分け中です。自動で遷移しない場合は<a href="#" id="fallback">こちら</a>をクリックしてください。</p>
+  <p>振り分け中です（1秒後に自動遷移）...</p>
+  <p>自動で遷移しない場合は<a href="#" id="fallback">こちら</a>をクリックしてください。</p>
   <script>
-    document.getElementById("fallback").href = urls[Math.floor(Math.random() * urls.length)];
+    document.getElementById("fallback").onclick = function() {
+      if (selectedUrl) {
+        window.location.href = selectedUrl;
+      } else {
+        window.location.href = urls[Math.floor(Math.random() * urls.length)];
+      }
+      return false;
+    };
   <\/script>
 </body>
 </html>`;
 
-      const blob = new Blob([htmlContent], { type: "text/html" });
-      const link = document.createElement("a");
-      link.href = URL.createObjectURL(blob);
-      link.download = "index.html";
-      link.click();
+      try {
+        const blob = new Blob([htmlContent], { type: "text/html" });
+        const link = document.createElement("a");
+        link.href = URL.createObjectURL(blob);
+        link.download = "index.html";
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+        URL.revokeObjectURL(link.href);
+      } catch (error) {
+        alert("ファイルの生成に失敗しました: " + error.message);
+      }
     }
+
+    // 初期サマリー更新
+    updateSummary();
   </script>
 </body>
 </html>
