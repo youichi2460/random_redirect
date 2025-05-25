@@ -2,23 +2,57 @@
 <html lang="ja">
 <head>
   <meta charset="UTF-8">
-  <title>ランダムジャンプHTMLジェネレーター</title>
+  <title>重み付きランダムジャンプHTMLジェネレーター</title>
 </head>
 <body>
-  <h1>ランダムジャンプ用HTML作成ツール</h1>
-  <p>1行につき1つのURLを入力してください：</p>
-  <textarea id="urlInput" rows="10" cols="60" placeholder="https://example.com/a&#10;https://example.com/b"></textarea><br>
+  <h1>重み付きランダムジャンプHTMLジェネレーター</h1>
+  <p>下の表にリンク先URLと重み（数値）を入力してください。</p>
+
+  <table id="urlTable">
+    <tr>
+      <th>URL</th>
+      <th>重み</th>
+    </tr>
+    <tr>
+      <td><input type="text" placeholder="https://example.com/a"></td>
+      <td><input type="number" value="1" min="1"></td>
+    </tr>
+    <tr>
+      <td><input type="text" placeholder="https://example.com/b"></td>
+      <td><input type="number" value="1" min="1"></td>
+    </tr>
+  </table>
+
+  <button onclick="addRow()">行を追加</button>
   <button onclick="generate()">HTMLファイルを生成・ダウンロード</button>
 
   <script>
-    function generate() {
-      const urls = document.getElementById("urlInput").value
-        .split("\n")
-        .map(u => u.trim())
-        .filter(u => u);
+    function addRow() {
+      const table = document.getElementById("urlTable");
+      const row = table.insertRow();
+      const cell1 = row.insertCell();
+      const cell2 = row.insertCell();
+      cell1.innerHTML = '<input type="text" placeholder="https://example.com">';
+      cell2.innerHTML = '<input type="number" value="1" min="1">';
+    }
 
-      if (urls.length < 2) {
-        alert("少なくとも2つ以上のURLを入力してください。");
+    function generate() {
+      const table = document.getElementById("urlTable");
+      const rows = Array.from(table.rows).slice(1); // Skip header row
+      const weightedUrls = [];
+
+      for (const row of rows) {
+        const url = row.cells[0].querySelector("input").value.trim();
+        const weight = parseInt(row.cells[1].querySelector("input").value);
+        if (url && weight > 0) {
+          for (let i = 0; i < weight; i++) {
+            weightedUrls.push(url);
+          }
+        }
+      }
+
+      if (weightedUrls.length < 2) {
+        alert("少なくとも2つ以上のURLを設定してください。");
         return;
       }
 
@@ -28,18 +62,18 @@
   <meta charset="UTF-8">
   <title>Random Redirect</title>
   <script>
-    const urls = ${JSON.stringify(urls)};
+    const urls = ${JSON.stringify(weightedUrls)};
     window.onload = function() {
       const selected = urls[Math.floor(Math.random() * urls.length)];
       window.location.href = selected;
     };
-  </script>
+  <\/script>
 </head>
 <body>
-  <p>振り分け中です。ジャンプしない場合は<a href="#" id="fallback">こちら</a>をクリックしてください。</p>
+  <p>振り分け中です。自動で遷移しない場合は<a href="#" id="fallback">こちら</a>をクリックしてください。</p>
   <script>
     document.getElementById("fallback").href = urls[Math.floor(Math.random() * urls.length)];
-  </script>
+  <\/script>
 </body>
 </html>`;
 
