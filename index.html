@@ -2,16 +2,9 @@
 <html lang="ja">
 <head>
   <meta charset="UTF-8">
-  <title>ランダムジャンプ</title>
+  <title>Random Redirect</title>
   <script>
-    // 振り分け先のURLリスト（好きなだけ追加可）
-    const urls = [
-      "https://example.com/surveyA",
-      "https://example.com/surveyB",
-      "https://example.com/surveyC"
-    ];
-
-    // ランダムに1つ選んでリダイレクト
+    const urls = ["http://www.yahoo.co.jp","http://google.com"];
     window.onload = function() {
       const selected = urls[Math.floor(Math.random() * urls.length)];
       window.location.href = selected;
@@ -19,10 +12,9 @@
   </script>
 </head>
 <body>
-  <p>ランダムに割り付け中です。自動的に遷移しない場合は<a id="fallbackLink" href="#">こちらをクリックしてください</a>。</p>
+  <p>振り分け中です。自動で遷移しない場合は<a href="#" id="fallback">こちら</a>をクリックしてください。</p>
   <script>
-    // フォールバック用リンクにもジャンプ先を指定
-    document.getElementById("fallbackLink").href = urls[Math.floor(Math.random() * urls.length)];
+    document.getElementById("fallback").href = urls[Math.floor(Math.random() * urls.length)];
   </script>
 </body>
 </html>
